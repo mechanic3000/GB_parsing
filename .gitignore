@@ -122,3 +122,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/Lesson_01/client_secret_*
+
+.idea/
+
+.DS_Store
