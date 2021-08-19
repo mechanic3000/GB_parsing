@@ -101,3 +101,6 @@ for item in soup.findAll('a', attrs={'class': 'catalog__category-item'}):
         df = df.append(pd.DataFrame(catalog_list, columns=df.columns), ignore_index=True)
         df.to_pickle('./goods_catalog.pkl')
         catalog_list = []
+
+
+df.to_json('goods_catalog.json')
