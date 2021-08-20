@@ -3,6 +3,13 @@ import requests
 import pandas as pd
 
 
+class NoneObject:
+    def __init__(self):
+        self.text = None
+
+
+none_object = NoneObject()
+
 url = 'https://roscontrol.com'
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_5_2) AppleWebKit/605.1.15 (KHTML, like Gecko) '
                         'Version/14.1.2 Safari/605.1.15'}
@@ -15,8 +22,8 @@ catalog_list = []
 
 df = pd.DataFrame(catalog_list, columns=columns)
 
-urls_list = input("Введите желаемые катергории через пробел (konditerskie_izdeliya ptitsa)\n"
-                  "Для вывода всех катогорий нажмите ENTER: ").split(" ")
+urls_list = input("Введите названия катергорий из URL через пробел ( ПРИМЕР: konditerskie_izdeliya ptitsa )\n"
+                  "Для вывода всех катогорий нажмите ENTER: ").split()
 
 # первый цикл пробегается по родительским категориям
 for item in soup.findAll('a', attrs={'class': 'catalog__category-item'}):
@@ -24,7 +31,7 @@ for item in soup.findAll('a', attrs={'class': 'catalog__category-item'}):
     category_url = item['href']
     print(f"Читаю каталог {category_name}")
 
-    if category_url.split('/')[3] not in urls_list:
+    if len(urls_list) > 0 and category_url.split('/')[3] not in urls_list:
         print(' *** Skipped *** ')
         continue  # если указан желаемый список категорий, то пропускаем ненужные
 
@@ -52,34 +59,15 @@ for item in soup.findAll('a', attrs={'class': 'catalog__category-item'}):
                 break  #  если элементов нет, идем дальше
 
             for good in goods_items:
-                #  ['Category', 'SubCategory', 'Name', 'Image_url', 'Url', 'Safety', 'Natural', 'CCal', 'Quality',
-                #  'Evaluation']
-
                 try:
-                    good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')
-                    try:
-                        safety = good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')[0].text
-                    except IndexError:
-                        safety = None
-
-                    try:
-                        natural = good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')[1].text
-                    except IndexError:
-                        natural = None
-
-                    try:
-                        ccal = good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')[2].text
-                    except IndexError:
-                        ccal = None
-
-                    try:
-                        quality = good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')[3].text
-                    except IndexError:
-                        quality = None
+                    rating_block = good.find('div', attrs={'class': 'rating-block'}).findAll('div', class_='right')
+                    #  бывает, что данных нет, заменяем на None
+                    safety, natural, ccal, quality, *other = rating_block + [none_object for _ in range(4)]
                 except AttributeError:
-                    safety, natural, ccal, quality = None, None, None, None
+                    safety, natural, ccal, quality = [none_object for _ in range(4)]
+
                 try:
-                    rating = good.find('div', class_='rating-value').text
+                    rating = good.find('div', class_='rating-value').text.strip(' ')
                 except AttributeError:
                     rating = None
 
@@ -89,18 +77,19 @@ for item in soup.findAll('a', attrs={'class': 'catalog__category-item'}):
                     good.find('div', class_='product__item-link').text,
                     good.find('div', class_='product__item-img js-product__img').img['src'],
                     url + good['href'],
-                    safety,
-                    natural,
-                    ccal,
-                    quality,
+                    safety.text,
+                    natural.text,
+                    ccal.text,
+                    quality.text,
                     rating
                 ])
+
         print('\n')
 
         # промежуточное сохранение и очистка рабочего списка
         df = df.append(pd.DataFrame(catalog_list, columns=df.columns), ignore_index=True)
-        df.to_pickle('./goods_catalog.pkl')
         catalog_list = []
 
 
+df.to_csv('goods_catalog.csv')
 df.to_json('goods_catalog.json')
