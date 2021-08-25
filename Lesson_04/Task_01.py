@@ -53,7 +53,7 @@ for i, item in enumerate(items):
 
     if len(title) > 0 and len(intro) > 0:
         news['title'] = title[0]
-        news['intro'] = intro[0]
+        news['intro'] = intro[0].replace('\xa0', ' ')
         news['date'] = datetime.fromisoformat(date[0])
         news['maker'] = maker[0]
         news['link'] = item
