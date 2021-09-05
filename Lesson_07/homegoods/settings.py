@@ -10,6 +10,10 @@
 BOT_NAME = 'homegoods'
 
 IMAGES_STORE = 'images'
+# IMAGES_THUMBS = {
+#     'small': (320, 240),
+#     'medium': (640, 480)
+# }
 
 SPIDER_MODULES = ['homegoods.spiders']
 NEWSPIDER_MODULE = 'homegoods.spiders'
