@@ -9,34 +9,31 @@ import scrapy
 from itemadapter import ItemAdapter
 from pymongo import MongoClient
 from scrapy.pipelines.images import ImagesPipeline
-import os
-from urllib.parse import urlparse
 
 
-class HomegoodsPipeline:
+class InstaparserPipeline:
     def __init__(self):
         client = MongoClient('localhost', 27017)
-        self.mongobase = client.homegoods
+        self.mongobase = client.instagram
 
     def process_item(self, item, spider):
         collection = self.mongobase[spider.name]
-        collection.insert_one(item)
+        collection.create_index([('user_id', 1), ('user_status', 1)], unique=True)
+        collection.update({'$and': [{'user_id': item['user_id']}, {'user_status': item['user_status']}]},
+                          {'$set': item}, upsert=True)
         return item
 
 
-class HomegoodsPhotosPipeline(ImagesPipeline):
+class InstaparserPhotosPipeline(ImagesPipeline):
     def get_media_requests(self, item, info):
-        if item['photos']:
-            for img_link in item['photos']:
-                try:
-                    yield scrapy.Request(img_link)
-                except Exception as e:
-                    print(e)
+        if item['photo']:
+            try:
+                yield scrapy.Request(item['photo'])
+            except Exception as e:
+                print(e)
 
     def item_completed(self, results, item, info):
         if results:
-            item['photos'] = [_[1] for _ in results if _[0]]
+            item['photo'] = [_[1] for _ in results if _[0]]
         return item
 
-    def file_path(self, request, response=None, info=None, *, item=None):
-        return f"{item['name']}/{os.path.basename(urlparse(request.url).path)}"

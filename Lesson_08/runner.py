@@ -1,15 +1,16 @@
 from scrapy.settings import Settings
 from scrapy.crawler import CrawlerProcess
 
-from homegoods import settings
-from homegoods.spiders.leroymerlin import LeroymerlinSpider
+from instaparser import settings
+from instaparser.spiders.instagram import InstagramSpider
+from instaparser.spiders.instagramfollowers import InstagramfollowersSpider
 
 if __name__ == '__main__':
     crawler_setting = Settings()
     crawler_setting.setmodule(settings)
 
     process = CrawlerProcess(crawler_setting)
-    query_str = input("Введите название категории товаров: ")
-    process.crawl(LeroymerlinSpider, query_str=query_str)
+    # process.crawl(InstagramSpider)
+    process.crawl(InstagramfollowersSpider)
 
     process.start()
