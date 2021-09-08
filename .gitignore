@@ -122,3 +122,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/Lesson_08/images/
+/Lesson_08/instaparser/pass_data.py
